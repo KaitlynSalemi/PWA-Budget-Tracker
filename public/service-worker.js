@@ -5,7 +5,16 @@ const FILES_TO_CACHE = [
   "/favicon.ico",
   "/index.js",
   "/manifest.webmanifest",
-  "/style.css"
+  "/style.css",
+  "/favicon.ico",
+  "/images/icon-72x72.png",
+  "/images/icon-96x96.png",
+  "/images/icon-128x128.png",
+  "/images/icon-144x144.png",
+  "/images/icon-152x152.png",
+  "/images/icon-192x192.png",
+  "/images/icon-384x384.png",
+  "/images/icon-512x512.png"
 ];
   
   
@@ -24,7 +33,6 @@ self.addEventListener("install", function(evt) {
   self.skipWaiting();
 });
 
-// activate
 self.addEventListener("activate", function(evt) {
   evt.waitUntil(
     caches.keys().then(keyList => {
@@ -44,6 +52,7 @@ self.addEventListener("activate", function(evt) {
 
 // fetch
 self.addEventListener("fetch", function(evt) {
+  // cache successful requests to the API
   if (evt.request.url.includes("/api/")) {
     evt.respondWith(
       caches.open(DATA_CACHE_NAME).then(cache => {
@@ -64,4 +73,14 @@ self.addEventListener("fetch", function(evt) {
     );
 
     return;
-}});
+  }
+
+  // if the request is not for the API, serve static assets using "offline-first" approach.
+  // see https://developers.google.com/web/fundamentals/instant-and-offline/offline-cookbook#cache-falling-back-to-network
+  evt.respondWith(
+    caches.match(evt.request).then(function(response) {
+      return response || fetch(evt.request);
+    })
+  );
+});
+
